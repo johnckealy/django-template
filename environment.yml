@@ -1,0 +1,15 @@
+name: myenv
+
+channels:
+  - conda-forge
+
+dependencies:
+  - django
+  - gunicorn
+  - pip
+  - pip:
+    - psycopg2
+    - django-widget-tweaks
+    - first
+    - selenium
+    - python-dotenv

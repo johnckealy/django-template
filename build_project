@@ -1,0 +1,62 @@
+#!/bin/bash
+set -e
+
+if [ ! -z "$CONDA_DEFAULT_ENV" ] 
+then
+    echo "Conda env  $CONDA_DEFAULT_ENV found"
+elif [ ! -z "$VIRTUAL_ENV" ] 
+then
+    echo "Virtualenv found: $VIRTUAL_ENV"
+else 
+    echo "No environment found. You can use the templates to create one manally (remember to delete what you don't need). Exiting.."; exit
+fi
+
+read -p "Specify root path for this project [$PWD]: " root_path
+root_path=${root_path:-$PWD}
+
+
+read -p "Enter name of Django project: " project_name
+
+cd $root_path
+
+django-admin startproject config
+
+mv config $project_name
+cd $project_name
+
+read -p "Enter name of Django app: " app_name
+
+
+cd $root_path
+./build_app $project_name $app_name $root_path
+cd $root_path
+
+
+
+sed "s/app_name/${app_name}/g" $root_path/settings.template.py > $root_path/$project_name/config/settings.py
+
+sed "s/app_name/${app_name}/g" $root_path/webpack.config.template.js > $root_path/$project_name/webpack.config.js
+
+sed "s/app_name/${app_name}/g" $root_path/package.template.json > $root_path/$project_name/package.json
+
+sed "s/app_name/${app_name}/g" $root_path/env.template > $root_path/$project_name/.env
+$root_path/$project_name/manage.py shell -c 'from django.core.management import utils; print(f"SECRET_KEY={utils.get_random_secret_key()}")' >> $root_path/$project_name/.env
+
+sed "s/app_name/${app_name}/g" $root_path/urls.config.template.py > $root_path/$project_name/config/urls.py
+
+
+echo "Setting up Webpack..."
+cd $root_path/$project_name/
+npm install
+npm run build
+
+
+
+echo "################################################"
+echo 
+echo "Django setup complete! Don't forget to:"
+echo
+echo "   1. Createdb, add models, makemigrations and migrate"
+echo "   2. Add the app to config/urls.py, and setup the app urls and views."
+echo
+echo "################################################"

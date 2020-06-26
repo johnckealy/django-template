@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+
+cd $1
+
+django-admin startapp $2
+
+cd $2
+mkdir -p $3/$1/$2/static/$2/images/
+mkdir -p $3/$1/$2/static/$2/js/
+mkdir -p $3/$1/$2/static/$2/scss/
+mkdir -p $3/$1/$2/templates/$2/
+
+cp $3/urls.template.py urls.py
+cp $3/views.template.py views.py
+
+sed "s/app_name/$2/g" $3/index.template.html > $3/$1/$2/templates/$2/index.html
+sed "s/app_name/$2/g" $3/base.template.html > $3/$1/$2/templates/$2/base.html
+cp $3/_navbar.template.html $3/$1/$2/templates/$2/_navbar.html 
+cp $3/_navbar.template.scss $3/$1/$2/static/$2/scss/_navbar.scss
+cp $3/application.template.scss $3/$1/$2/static/$2/scss/application.scss
+cp $3/index.template.js $3/$1/$2/static/$2/js/index.js

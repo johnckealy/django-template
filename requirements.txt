@@ -1,0 +1,14 @@
+django
+gunicorn
+psycopg2-binary
+python-dotenv
+
+django-widget-tweaks
+django-webpack-loader 
+django-extensions
+django-cors-headers
+
+selenium
+markdown
+netCDF4
+scipy
