@@ -1,0 +1,88 @@
+#!/bin/bash
+set -e
+builder_path=/home/jokea/code/django-template/
+
+
+
+if [ ! -z "$CONDA_DEFAULT_ENV" ] 
+then
+    echo "Conda env  $CONDA_DEFAULT_ENV found"
+elif [ ! -z "$VIRTUAL_ENV" ] 
+then
+    echo "Virtualenv found: $VIRTUAL_ENV."
+else 
+    echo "No environment found. You can use the templates to create one manally (remember to delete what you don't need). Exiting.."; exit
+fi
+
+read -p "Specify root path for this project [$PWD]: " project_path
+read -p "Enter name of Django project: " project_name
+project_path=${project_path:-$PWD}
+
+
+read -p "Use default requirements.txt file? " -n 1 -r
+echo 
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+else 
+    cp $builder_path/requirements.template.txt $project_path/requirements.txt
+    pip install -r $project_path/requirements.txt
+fi
+
+
+
+
+if [ ! -d $project_path ]
+then
+    mkdir $project_path
+fi
+
+
+cd $project_path
+
+django-admin startproject config
+
+mv config $project_name
+cd $project_name
+
+read -p "Enter name of Django app: " app_name
+
+echo $builder_path
+$builder_path/build_app $project_name $app_name $project_path $builder_path
+
+
+
+sed "s/app_name/${app_name}/g" $builder_path/settings.template.py > $project_path/$project_name/config/settings.py
+
+sed "s/app_name/${app_name}/g" $builder_path/webpack.config.template.js > $project_path/$project_name/webpack.config.js
+
+sed "s/app_name/${app_name}/g" $builder_path/package.template.json > $project_path/$project_name/package.json
+
+sed "s/app_name/${app_name}/g" $builder_path/env.template > $project_path/$project_name/.env
+$project_path/$project_name/manage.py shell -c 'from django.core.management import utils; print(f"SECRET_KEY={utils.get_random_secret_key()}")' >> $project_path/$project_name/.env
+
+sed "s/app_name/${app_name}/g" $builder_path/urls.config.template.py > $project_path/$project_name/config/urls.py
+
+mkdir -p $project_path/$project_name/$app_name/static/$app_name/js/ 
+mkdir -p $project_path/$project_name/$app_name/static/$app_name/scss/ 
+cp -r UI_toolkit/* $project_path/$project_name/$app_name/static/$app_name/scss/
+
+
+echo "Setting up Webpack..."
+cd $project_path/$project_name/
+npm install
+npm run build
+
+mv $project_path/requirements.txt $project_path/$project_name/
+
+touch $project_path/$project_name/README.md
+
+
+echo "################################################"
+echo 
+echo "Django setup complete! Don't forget to:"
+echo
+echo "   1. Createdb, add models, makemigrations and migrate"
+echo "   2. Add the app to config/urls.py, and setup the app urls and views."
+echo
+echo "################################################"

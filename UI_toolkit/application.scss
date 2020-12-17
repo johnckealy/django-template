@@ -1,0 +1,15 @@
+@import "~bootstrap/scss/bootstrap";
+@import "config";
+@import "navbar";
+@import "banners";
+@import "buttons";
+@import "carousel";
+@import "search";
+@import "home";
+
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
